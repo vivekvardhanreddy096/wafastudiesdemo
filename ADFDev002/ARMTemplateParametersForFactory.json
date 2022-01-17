@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "ADFDev002"
+		},
+		"ls_SqlServerfoldertable_connectionString": {
+			"value": ""
+		},
+		"ls_sadev0002_connectionString": {
+			"value": ""
+		},
+		"trigger3_properties_typeProperties_scope": {
+			"value": "/subscriptions/68042acd-e048-4754-aefa-d6a463490d4c/resourceGroups/RGDev/providers/Microsoft.Storage/storageAccounts/sadev0002"
+		}
+	}
+}

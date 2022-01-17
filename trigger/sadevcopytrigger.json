@@ -1,0 +1,25 @@
+{
+	"name": "sadevcopytrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "copysadev",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 1,
+				"startTime": "2021-12-30T12:20:00Z",
+				"endTime": "2021-12-31T12:25:00Z",
+				"timeZone": "UTC"
+			}
+		}
+	}
+}

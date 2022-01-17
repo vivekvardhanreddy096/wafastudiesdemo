@@ -1,0 +1,28 @@
+{
+	"name": "powerquery1",
+	"properties": {
+		"type": "WranglingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"name": "empdataset",
+					"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> empdataset",
+					"dataset": {
+						"referenceName": "empdataset",
+						"type": "DatasetReference"
+					}
+				},
+				{
+					"name": "deptdataset",
+					"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> deptdataset",
+					"dataset": {
+						"referenceName": "deptdataset",
+						"type": "DatasetReference"
+					}
+				}
+			],
+			"script": "section Section1;\r\nshared empdataset = let\r\n  AdfDoc = AzureStorage.BlobContents(\"https://sadev0002.blob.core.windows.net/devdemo/input/employee.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared deptdataset = let\r\n  AdfDoc = AzureStorage.BlobContents(\"https://sadev0002.blob.core.windows.net/devdemo/input/department.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared UserQuery = let\r\n  Source = empdataset,\r\n  #\"Merged queries\" = Table.NestedJoin(Source, {\"Department\"}, deptdataset, {\"deptid\"}, \"deptdataset\", JoinKind.Inner),\r\n  #\"Expanded deptdataset\" = Table.ExpandTableColumn(#\"Merged queries\", \"deptdataset\", {\"deptid\", \" deptname\"}, {\"deptdataset.deptid\", \"deptdataset. deptname\"}),\r\n  #\"Removed columns\" = Table.RemoveColumns(#\"Expanded deptdataset\", {\"Department\"}),\r\n  #\"Renamed columns\" = Table.RenameColumns(#\"Removed columns\", {{\"deptdataset.deptid\", \"deptid\"}, {\"deptdataset. deptname\", \"deptname\"}})\r\nin\r\n  #\"Renamed columns\";\r\n",
+			"documentLocale": "en-us"
+		}
+	}
+}

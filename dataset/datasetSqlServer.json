@@ -1,0 +1,27 @@
+{
+	"name": "datasetSqlServer",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_SqlServerfoldertable",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "sno",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "foldername",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "foldernames"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

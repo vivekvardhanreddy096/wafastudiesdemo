@@ -2,7 +2,9 @@
 	"name": "ls_sadev0002",
 	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
-		"annotations": [],
+		"annotations": [
+			"storage account"
+		],
 		"type": "AzureBlobStorage",
 		"typeProperties": {
 			"connectionString": "DefaultEndpointsProtocol=https;AccountName=sadev0002;EndpointSuffix=core.windows.net;",

@@ -5,6 +5,9 @@
 		"factoryName": {
 			"value": "ADFDev002"
 		},
+		"linkedService1_connectionString": {
+			"value": ""
+		},
 		"ls_SqlServerfoldertable_connectionString": {
 			"value": ""
 		},

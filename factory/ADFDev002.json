@@ -1,5 +1,13 @@
 {
 	"name": "ADFDev002",
+	"properties": {
+		"globalParameters": {
+			"rootpath": {
+				"type": "string",
+				"value": "devdemo"
+			}
+		}
+	},
 	"location": "eastus",
 	"identity": {
 		"type": "SystemAssigned",

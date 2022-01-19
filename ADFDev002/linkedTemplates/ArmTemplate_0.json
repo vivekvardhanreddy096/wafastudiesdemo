@@ -760,7 +760,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/empupdateddataset')]",
+			"name": "[concat(parameters('factoryName'), '/empupdate2dataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -773,7 +773,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
-						"fileName": "updatedemployee1.csv",
+						"fileName": "updatedemployee2.csv",
 						"folderPath": "input",
 						"container": "devdemo"
 					},

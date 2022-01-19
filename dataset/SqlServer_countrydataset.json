@@ -1,0 +1,25 @@
+{
+	"name": "SqlServer_countrydataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_SqlServer_wafa",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "countrycode",
+				"type": "varchar"
+			},
+			{
+				"name": "countryname",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "country"
+		}
+	}
+}

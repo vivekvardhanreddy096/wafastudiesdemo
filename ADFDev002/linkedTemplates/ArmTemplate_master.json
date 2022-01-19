@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'linkedService1'"
 		},
+		"ls_SqlServer_wafa_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_SqlServer_wafa'"
+		},
 		"ls_SqlServerfoldertable_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_SqlServerfoldertable'"
@@ -52,6 +56,9 @@
 					},
 					"linkedService1_connectionString": {
 						"value": "[parameters('linkedService1_connectionString')]"
+					},
+					"ls_SqlServer_wafa_connectionString": {
+						"value": "[parameters('ls_SqlServer_wafa_connectionString')]"
 					},
 					"ls_SqlServerfoldertable_connectionString": {
 						"value": "[parameters('ls_SqlServerfoldertable_connectionString')]"
@@ -116,6 +123,26 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ADFDev002_ArmTemplate_2')]"
+			]
+		},
+		{
+			"name": "ADFDev002_ArmTemplate_4",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_4.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"trigger3_properties_typeProperties_scope": {
 						"value": "[parameters('trigger3_properties_typeProperties_scope')]"
@@ -123,7 +150,7 @@
 				}
 			},
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'ADFDev002_ArmTemplate_2')]"
+				"[resourceId('Microsoft.Resources/deployments', 'ADFDev002_ArmTemplate_3')]"
 			]
 		}
 	]

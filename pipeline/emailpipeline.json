@@ -85,7 +85,10 @@
 					"headers": {
 						"Content-Type": "application/json"
 					},
-					"body": "sdfdsf"
+					"body": {
+						"value": "{\n    \"pipeline name\":\"@{pipeline().Pipeline}\",\n    \"Error message\":\"@{activity('Copy data1').Error.Message}\",\n    \"datafactory\":\"@{pipeline().DataFactory}\",\n    \"Runid\":\"@{pipeline().RunId}\"\n}",
+						"type": "Expression"
+					}
 				}
 			}
 		],

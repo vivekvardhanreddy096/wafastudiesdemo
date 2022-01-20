@@ -104,11 +104,8 @@
 				],
 				"userProperties": [],
 				"typeProperties": {
-					"message": "2200",
-					"errorCode": {
-						"value": "@activity('Copy data1').Error.Message",
-						"type": "Expression"
-					}
+					"message": "@activity('Copy data1').Error.Message",
+					"errorCode": "2200"
 				}
 			}
 		],

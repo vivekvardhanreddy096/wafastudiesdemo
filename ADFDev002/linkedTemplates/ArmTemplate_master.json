@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'linkedService1'"
 		},
+		"ls_SqlServer_emp1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_SqlServer_emp1'"
+		},
 		"ls_SqlServer_wafa_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_SqlServer_wafa'"
@@ -56,6 +60,9 @@
 					},
 					"linkedService1_connectionString": {
 						"value": "[parameters('linkedService1_connectionString')]"
+					},
+					"ls_SqlServer_emp1_connectionString": {
+						"value": "[parameters('ls_SqlServer_emp1_connectionString')]"
 					},
 					"ls_SqlServer_wafa_connectionString": {
 						"value": "[parameters('ls_SqlServer_wafa_connectionString')]"

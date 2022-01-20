@@ -8,6 +8,9 @@
 		"linkedService1_connectionString": {
 			"value": ""
 		},
+		"ls_SqlServer_emp1_connectionString": {
+			"value": ""
+		},
 		"ls_SqlServer_wafa_connectionString": {
 			"value": ""
 		},

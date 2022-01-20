@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'linkedService1'"
 		},
+		"ls_SqlServer_emp1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_SqlServer_emp1'"
+		},
 		"ls_SqlServer_wafa_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_SqlServer_wafa'"
@@ -1286,6 +1290,53 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/Newbranchdataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/parsepipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "parsedataflow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "parsedataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"emp1data": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/parsedataflow')]"
 			]
 		},
 		{
@@ -2634,6 +2685,45 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/emp1_SqlServer_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_SqlServer_emp1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "empid",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "empname",
+						"type": "nvarchar"
+					},
+					{
+						"name": "skills",
+						"type": "nvarchar"
+					},
+					{
+						"name": "address",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "employee1"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_SqlServer_emp1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/emp1dataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -2697,7 +2787,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "ls_SqlServer_wafa",
+					"referenceName": "ls_SqlServer_emp1",
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
@@ -2728,11 +2818,11 @@
 				],
 				"typeProperties": {
 					"schema": "dbo",
-					"table": "employee"
+					"table": "employee1"
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_SqlServer_wafa')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_SqlServer_emp1')]"
 			]
 		},
 		{
@@ -3383,6 +3473,19 @@
 				"type": "AzureBlobStorage",
 				"typeProperties": {
 					"connectionString": "[parameters('linkedService1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_SqlServer_emp1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_SqlServer_emp1_connectionString')]"
 				}
 			},
 			"dependsOn": []
@@ -4108,6 +4211,47 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/empupdateddataset')]",
+				"[concat(variables('factoryId'), '/datasets/outputdataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/parsedataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "emp1_SqlServer_dataset",
+								"type": "DatasetReference"
+							},
+							"name": "emp1data"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outputdataset",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "skillsParse"
+						},
+						{
+							"name": "AddressParse"
+						}
+					],
+					"script": "source(output(\n\t\tempid as integer,\n\t\tempname as string,\n\t\tskills as string,\n\t\taddress as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> emp1data\nemp1data parse(skillset = skills ? (skill1 as string,\n\t\tskill2 as string,\n\t\tskill3 as string),\n\tformat: 'delimited',\n\tcolumnNamesAsHeader: false,\n\tcolumnDelimiter: '|',\n\tnullValue: '') ~> skillsParse\nskillsParse parse(address = address ? (city as string,\n\t\tcountry as string),\n\tformat: 'json',\n\tdocumentForm: 'singleDocument') ~> AddressParse\nAddressParse sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['parsedata.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\tempid,\n\t\tempname,\n\t\tskill1 = skillset.skill1,\n\t\tskill2 = skillset.skill2,\n\t\tskill3 = skillset.skill3,\n\t\tcity = address.city,\n\t\tcountry = address.country\n\t),\n\tpartitionBy('hash', 1)) ~> sink1"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/emp1_SqlServer_dataset')]",
 				"[concat(variables('factoryId'), '/datasets/outputdataset')]"
 			]
 		},

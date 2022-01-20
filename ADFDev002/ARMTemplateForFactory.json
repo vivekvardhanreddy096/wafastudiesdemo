@@ -962,11 +962,11 @@
 						],
 						"userProperties": [],
 						"typeProperties": {
-							"message": "2200",
-							"errorCode": {
+							"message": {
 								"value": "@activity('Copy data1').Error.Message",
 								"type": "Expression"
-							}
+							},
+							"errorCode": "2200"
 						}
 					}
 				],

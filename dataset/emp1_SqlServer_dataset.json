@@ -1,5 +1,5 @@
 {
-	"name": "emp_SqlServer_dataset",
+	"name": "emp1_SqlServer_dataset",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_SqlServer_emp1",
@@ -9,26 +9,21 @@
 		"type": "SqlServerTable",
 		"schema": [
 			{
-				"name": "emp_id",
+				"name": "empid",
 				"type": "int",
 				"precision": 10
 			},
 			{
-				"name": "emp_name",
-				"type": "varchar"
+				"name": "empname",
+				"type": "nvarchar"
 			},
 			{
-				"name": "gender",
-				"type": "varchar"
+				"name": "skills",
+				"type": "nvarchar"
 			},
 			{
-				"name": "country",
-				"type": "varchar"
-			},
-			{
-				"name": "salary",
-				"type": "int",
-				"precision": 10
+				"name": "address",
+				"type": "nvarchar"
 			}
 		],
 		"typeProperties": {

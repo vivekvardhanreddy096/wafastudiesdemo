@@ -1,0 +1,35 @@
+{
+	"name": "parsedataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "emp1_SqlServer_dataset",
+						"type": "DatasetReference"
+					},
+					"name": "emp1data"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "outputdataset",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "skillsParse"
+				},
+				{
+					"name": "AddressParse"
+				}
+			],
+			"script": "source(output(\n\t\tempid as integer,\n\t\tempname as string,\n\t\tskills as string,\n\t\taddress as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> emp1data\nemp1data parse(skillset = skills ? (skill1 as string,\n\t\tskill2 as string,\n\t\tskill3 as string),\n\tformat: 'delimited',\n\tcolumnNamesAsHeader: false,\n\tcolumnDelimiter: '|',\n\tnullValue: '') ~> skillsParse\nskillsParse parse(address = address ? (city as string,\n\t\tcountry as string),\n\tformat: 'json',\n\tdocumentForm: 'singleDocument') ~> AddressParse\nAddressParse sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['parsedata.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\tempid,\n\t\tempname,\n\t\tskill1 = skillset.skill1,\n\t\tskill2 = skillset.skill2,\n\t\tskill3 = skillset.skill3,\n\t\tcity = address.city,\n\t\tcountry = address.country\n\t),\n\tpartitionBy('hash', 1)) ~> sink1"
+		}
+	}
+}

@@ -106,7 +106,7 @@
 				"typeProperties": {
 					"message": "2200",
 					"errorCode": {
-						"value": "@activity('Copy data1').error.message",
+						"value": "@activity('Copy data1').Error.Message",
 						"type": "Expression"
 					}
 				}

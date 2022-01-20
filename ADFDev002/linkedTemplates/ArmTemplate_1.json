@@ -1102,6 +1102,26 @@
 								"type": "Expression"
 							}
 						}
+					},
+					{
+						"name": "Fail1",
+						"type": "Fail",
+						"dependsOn": [
+							{
+								"activity": "Web1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "2200",
+							"errorCode": {
+								"value": "@activity('Copy data1').error.message",
+								"type": "Expression"
+							}
+						}
 					}
 				],
 				"policy": {

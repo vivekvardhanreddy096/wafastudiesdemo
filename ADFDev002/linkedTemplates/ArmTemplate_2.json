@@ -53,6 +53,94 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/test1dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sadev0002",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "test1.csv",
+						"folderPath": "input",
+						"container": "devdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "empid",
+						"type": "String"
+					},
+					{
+						"name": "empname",
+						"type": "String"
+					},
+					{
+						"name": " dept",
+						"type": "String"
+					},
+					{
+						"name": " salary",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/testdataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sadev0002",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "test.csv",
+						"folderPath": "input",
+						"container": "devdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "empid",
+						"type": "String"
+					},
+					{
+						"name": "empname",
+						"type": "String"
+					},
+					{
+						"name": " dept",
+						"type": "String"
+					},
+					{
+						"name": " salary",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/updatedempdataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1708,102 +1796,6 @@
 				}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Uniondataflow')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "ITemployeesdataaset",
-								"type": "DatasetReference"
-							},
-							"name": "ITemployees"
-						},
-						{
-							"dataset": {
-								"referenceName": "HRemployeedataset",
-								"type": "DatasetReference"
-							},
-							"name": "HRemployees"
-						},
-						{
-							"dataset": {
-								"referenceName": "payrollempdataset",
-								"type": "DatasetReference"
-							},
-							"name": "Payrollemployees"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "outputdataset",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "UnionAllemployees"
-						}
-					],
-					"script": "source(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> ITemployees\nsource(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> HRemployees\nsource(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> Payrollemployees\nITemployees, HRemployees, Payrollemployees union(byName: true)~> UnionAllemployees\nUnionAllemployees sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['allemployees.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/aggregatedataflow')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "updatedempdataset",
-								"type": "DatasetReference"
-							},
-							"name": "employees"
-						},
-						{
-							"dataset": {
-								"referenceName": "deptdataset",
-								"type": "DatasetReference"
-							},
-							"name": "department"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "outputdataset",
-								"type": "DatasetReference"
-							},
-							"name": "totalemployeebydept"
-						}
-					],
-					"transformations": [
-						{
-							"name": "Aggregatebydept"
-						},
-						{
-							"name": "Join1"
-						}
-					],
-					"script": "source(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> employees\nsource(output(\n\t\tdeptid as string,\n\t\t{ deptname} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> department\nemployees aggregate(groupBy(Department),\n\ttotalemployees = count(Empid)) ~> Aggregatebydept\nAggregatebydept, department join(Department == deptid,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> Join1\nJoin1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['totalemployeesbydept.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\t{ deptname},\n\t\ttotalemployees\n\t),\n\tpartitionBy('hash', 1)) ~> totalemployeebydept"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/updatedempdataset')]"
-			]
 		}
 	]
 }

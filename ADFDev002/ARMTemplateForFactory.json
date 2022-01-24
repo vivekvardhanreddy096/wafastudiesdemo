@@ -4294,6 +4294,98 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/test1dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sadev0002",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "test1.csv",
+						"folderPath": "input",
+						"container": "devdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "empid",
+						"type": "String"
+					},
+					{
+						"name": "empname",
+						"type": "String"
+					},
+					{
+						"name": " dept",
+						"type": "String"
+					},
+					{
+						"name": " salary",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sadev0002')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/testdataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sadev0002",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "test.csv",
+						"folderPath": "input",
+						"container": "devdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "empid",
+						"type": "String"
+					},
+					{
+						"name": "empname",
+						"type": "String"
+					},
+					{
+						"name": " dept",
+						"type": "String"
+					},
+					{
+						"name": " salary",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sadev0002')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/updatedempdataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -4819,6 +4911,58 @@
 				"[concat(variables('factoryId'), '/datasets/emp_SqlServer_dataset')]",
 				"[concat(variables('factoryId'), '/datasets/empupdatedataset3')]",
 				"[concat(variables('factoryId'), '/datasets/SqlServer_countrydataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/duplicaterowsdataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "testdataset",
+								"type": "DatasetReference"
+							},
+							"name": "empdata1"
+						},
+						{
+							"dataset": {
+								"referenceName": "test1dataset",
+								"type": "DatasetReference"
+							},
+							"name": "empdata2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outputdataset",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Union1"
+						},
+						{
+							"name": "Aggregate1"
+						},
+						{
+							"name": "Sort1"
+						}
+					],
+					"script": "source(output(\n\t\tempid as string,\n\t\tempname as string,\n\t\t{ dept} as string,\n\t\t{ salary} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> empdata1\nsource(output(\n\t\tempid as string,\n\t\tempname as string,\n\t\t{ dept} as string,\n\t\t{ salary} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> empdata2\nempdata1, empdata2 union(byName: true)~> Union1\nUnion1 aggregate(groupBy(empid),\n\teach(match(name!='empid'), $$ = last($$))) ~> Aggregate1\nAggregate1 sort(asc(empid, true)) ~> Sort1\nSort1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['duplicaterows.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/testdataset')]",
+				"[concat(variables('factoryId'), '/datasets/test1dataset')]",
+				"[concat(variables('factoryId'), '/datasets/outputdataset')]"
 			]
 		},
 		{

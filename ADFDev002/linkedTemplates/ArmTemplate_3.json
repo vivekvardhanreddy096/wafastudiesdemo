@@ -13,6 +13,100 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Uniondataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ITemployeesdataaset",
+								"type": "DatasetReference"
+							},
+							"name": "ITemployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "HRemployeedataset",
+								"type": "DatasetReference"
+							},
+							"name": "HRemployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "payrollempdataset",
+								"type": "DatasetReference"
+							},
+							"name": "Payrollemployees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outputdataset",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "UnionAllemployees"
+						}
+					],
+					"script": "source(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> ITemployees\nsource(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> HRemployees\nsource(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> Payrollemployees\nITemployees, HRemployees, Payrollemployees union(byName: true)~> UnionAllemployees\nUnionAllemployees sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['allemployees.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/aggregatedataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "updatedempdataset",
+								"type": "DatasetReference"
+							},
+							"name": "employees"
+						},
+						{
+							"dataset": {
+								"referenceName": "deptdataset",
+								"type": "DatasetReference"
+							},
+							"name": "department"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outputdataset",
+								"type": "DatasetReference"
+							},
+							"name": "totalemployeebydept"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Aggregatebydept"
+						},
+						{
+							"name": "Join1"
+						}
+					],
+					"script": "source(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> employees\nsource(output(\n\t\tdeptid as string,\n\t\t{ deptname} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> department\nemployees aggregate(groupBy(Department),\n\ttotalemployees = count(Empid)) ~> Aggregatebydept\nAggregatebydept, department join(Department == deptid,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> Join1\nJoin1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['totalemployeesbydept.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\t{ deptname},\n\t\ttotalemployees\n\t),\n\tpartitionBy('hash', 1)) ~> totalemployeebydept"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/assertdataflow')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -145,6 +239,54 @@
 						}
 					],
 					"script": "source(output(\n\t\tmax_emp_id as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: 'select max(emp_id) as max_emp_id from employee',\n\tformat: 'query') ~> emptable\nsource(output(\n\t\tEmpName as string,\n\t\tGender as string,\n\t\tCountry as string,\n\t\tSalary as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource(output(\n\t\tcountrycode as string,\n\t\tcountryname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> countrytable\nsource1 keyGenerate(output(empid as long),\n\tstartAt: 1L) ~> SurrogateKey1\nSurrogateKey1 derive(empid = empid+cachedmaxempid#outputs()[1].max_emp_id,\n\t\tCountry = cachedcountries#lookup(Country).countryname) ~> DerivedColumn1\nemptable sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tstore: 'cache',\n\tformat: 'inline',\n\toutput: false,\n\tsaveOrder: 1,\n\tmapColumn(\n\t\tmax_emp_id\n\t)) ~> cachedmaxempid\nDerivedColumn1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\temp_id as integer,\n\t\temp_name as string,\n\t\tgender as string,\n\t\tcountry as string,\n\t\tsalary as integer\n\t),\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\temp_id = empid,\n\t\temp_name = EmpName,\n\t\tgender = Gender,\n\t\tcountry = Country,\n\t\tsalary = Salary\n\t)) ~> sink1\ncountrytable sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tkeys:['countrycode'],\n\tstore: 'cache',\n\tformat: 'inline',\n\toutput: false,\n\tsaveOrder: 1) ~> cachedcountries"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/duplicaterowsdataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "testdataset",
+								"type": "DatasetReference"
+							},
+							"name": "empdata1"
+						},
+						{
+							"dataset": {
+								"referenceName": "test1dataset",
+								"type": "DatasetReference"
+							},
+							"name": "empdata2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outputdataset",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Union1"
+						},
+						{
+							"name": "Aggregate1"
+						},
+						{
+							"name": "Sort1"
+						}
+					],
+					"script": "source(output(\n\t\tempid as string,\n\t\tempname as string,\n\t\t{ dept} as string,\n\t\t{ salary} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> empdata1\nsource(output(\n\t\tempid as string,\n\t\tempname as string,\n\t\t{ dept} as string,\n\t\t{ salary} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> empdata2\nempdata1, empdata2 union(byName: true)~> Union1\nUnion1 aggregate(groupBy(empid),\n\teach(match(name!='empid'), $$ = last($$))) ~> Aggregate1\nAggregate1 sort(asc(empid, true)) ~> Sort1\nSort1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['duplicaterows.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
 				}
 			},
 			"dependsOn": []
@@ -654,107 +796,6 @@
 					],
 					"script": "section Section1;\r\nshared empdataset = let\r\n  AdfDoc = AzureStorage.BlobContents(\"https://sadev0002.blob.core.windows.net/devdemo/input/employee.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared deptdataset = let\r\n  AdfDoc = AzureStorage.BlobContents(\"https://sadev0002.blob.core.windows.net/devdemo/input/department.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared UserQuery = let\r\n  Source = empdataset,\r\n  #\"Grouped rows\" = Table.Group(Source, {\"Department\"}, {{\"totalemployees\", each Table.RowCount(_), Int64.Type}}),\r\n  #\"Merged queries\" = Table.NestedJoin(#\"Grouped rows\", {\"Department\"}, deptdataset, {\"deptid\"}, \"deptdataset\", JoinKind.Inner),\r\n  #\"Expanded deptdataset\" = Table.ExpandTableColumn(#\"Merged queries\", \"deptdataset\", {\"deptid\", \" deptname\"}, {\"deptdataset.deptid\", \"deptdataset. deptname\"}),\r\n  #\"Reordered columns\" = Table.ReorderColumns(#\"Expanded deptdataset\", {\"deptdataset.deptid\", \"deptdataset. deptname\", \"Department\", \"totalemployees\"}),\r\n  #\"Removed columns\" = Table.RemoveColumns(#\"Reordered columns\", {\"Department\", \"deptdataset.deptid\"})\r\nin\r\n  #\"Removed columns\";\r\n",
 					"documentLocale": "en-us"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/rankdataflow')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "empupdate2dataset",
-								"type": "DatasetReference"
-							},
-							"name": "emp"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "outputdataset",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "Rank1"
-						}
-					],
-					"script": "source(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> emp\nemp rank(asc(Salary, true),\n\toutput(ranking as long),\n\tdense: true) ~> Rank1\nRank1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['rankoutput.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/schemadriftdataflow')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "schemadriftdataset",
-								"type": "DatasetReference"
-							},
-							"name": "source1"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "outputdataset",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [],
-					"script": "source(output(\n\t\tsno as integer,\n\t\tempname as string,\n\t\tcountry as string,\n\t\tdept as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpreferredIntegralType: 'integer') ~> source1\nsource1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/sortdataflow')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "empdataset",
-								"type": "DatasetReference"
-							},
-							"name": "source1"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "outputdataset",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "Sort1"
-						}
-					],
-					"script": "source(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 sort(asc(EmployeeName, true),\n\tcaseInsensitive: true) ~> Sort1\nSort1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['sortoutput.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
 				}
 			},
 			"dependsOn": []

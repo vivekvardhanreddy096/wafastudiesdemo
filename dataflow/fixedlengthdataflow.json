@@ -1,0 +1,35 @@
+{
+	"name": "fixedlengthdataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "fixedlength",
+						"type": "DatasetReference"
+					},
+					"name": "empdata"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "outputdataset",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn1"
+				},
+				{
+					"name": "Select1"
+				}
+			],
+			"script": "source(output(\n\t\tColumn_1 as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> empdata\nempdata derive(empid = substring(Column_1, 1, 4),\n\t\tempname = substring(Column_1, 5, 10),\n\t\tState = substring(Column_1, 15, 2),\n\t\tContact = substring(Column_1, 17, 10)) ~> DerivedColumn1\nDerivedColumn1 select(mapColumn(\n\t\tempid,\n\t\tempname,\n\t\tState,\n\t\tContact\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['fixedlength.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+		}
+	}
+}

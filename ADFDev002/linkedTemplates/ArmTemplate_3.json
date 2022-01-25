@@ -13,6 +13,93 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Deriveddataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "employeetestdataset",
+								"type": "DatasetReference"
+							},
+							"name": "employees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outputdataset",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DerivedColumn1"
+						}
+					],
+					"script": "source(output(\n\t\tempid as string,\n\t\tempname as string,\n\t\t{ dept} as string,\n\t\t{ salary} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> employees\nemployees derive({ dept} = lower({ dept}),\n\t\tNewdept = iif(isNull({ dept}), 'unknown', lower({ dept}))) ~> DerivedColumn1\nDerivedColumn1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['deriveddata.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Newbranchdataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "empdataset",
+								"type": "DatasetReference"
+							},
+							"name": "employeedata"
+						},
+						{
+							"dataset": {
+								"referenceName": "deptdataset",
+								"type": "DatasetReference"
+							},
+							"name": "departmentdata"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outputdataset",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						},
+						{
+							"dataset": {
+								"referenceName": "outputdataset",
+								"type": "DatasetReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Aggregate1"
+						},
+						{
+							"name": "Join1"
+						}
+					],
+					"script": "source(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> employeedata\nsource(output(\n\t\tdeptid as string,\n\t\t{ deptname} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> departmentdata\nemployeedata aggregate(groupBy(Department),\n\ttotalemployees = count(Empid)) ~> Aggregate1\nemployeedata, departmentdata join(Department == deptid,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> Join1\nAggregate1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['allemployeedeptdata.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1\nJoin1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['Allemployeedatabydept.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\tEmpid,\n\t\tEmployeeName,\n\t\tAddress,\n\t\tPhoneNumber,\n\t\tSalary,\n\t\tdeptid,\n\t\t{ deptname}\n\t),\n\tpartitionBy('hash', 1)) ~> sink2"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Uniondataflow')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -589,6 +676,92 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/logdetailsdataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "dummydataset",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "logoutput",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DerivedColumn1"
+						},
+						{
+							"name": "Select1"
+						}
+					],
+					"script": "parameters{\n\tADFName as string,\n\tPipelineName as string,\n\tStatus as string,\n\tRunid as string,\n\tTriggerName as string,\n\tlogfilename as string\n}\nsource(output(\n\t\tColumn_1 as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 derive(ADFName = $ADFName,\n\t\tPipelineName = $PipelineName,\n\t\tStatus = $Status,\n\t\tRunid = $Runid,\n\t\tTriggerName = $TriggerName) ~> DerivedColumn1\nDerivedColumn1 select(mapColumn(\n\t\tADFName,\n\t\tPipelineName,\n\t\tStatus,\n\t\tRunid,\n\t\tTriggerName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:[($logfilename)],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/logdetailsdataflowappend')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "dummydataset",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "logoutput",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "logoutput",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DerivedColumn1"
+						},
+						{
+							"name": "Select1"
+						},
+						{
+							"name": "Union1"
+						}
+					],
+					"script": "parameters{\n\tADFName as string,\n\tPipelineName as string,\n\tStatus as string,\n\tRunid as string,\n\tTriggerName as string,\n\tlogfilename as string\n}\nsource(output(\n\t\tColumn_1 as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source2\nsource1 derive(ADFName = $ADFName,\n\t\tPipelineName = $PipelineName,\n\t\tStatus = $Status,\n\t\tRunid = $Runid,\n\t\tTriggerName = $TriggerName) ~> DerivedColumn1\nDerivedColumn1 select(mapColumn(\n\t\tADFName,\n\t\tPipelineName,\n\t\tStatus,\n\t\tRunid,\n\t\tTriggerName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1, source2 union(byName: true)~> Union1\nUnion1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:[($logfilename)],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/lookupdataflow')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -661,141 +834,6 @@
 						}
 					],
 					"script": "parameters{\n\tdeptname as string\n}\nsource(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 filter(Department==$deptname) ~> Filter1\nFilter1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['parameterizedata.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/parsedataflow')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "emp1_SqlServer_dataset",
-								"type": "DatasetReference"
-							},
-							"name": "emp1data"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "outputdataset",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "skillsParse"
-						},
-						{
-							"name": "AddressParse"
-						}
-					],
-					"script": "source(output(\n\t\tempid as integer,\n\t\tempname as string,\n\t\tskills as string,\n\t\taddress as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> emp1data\nemp1data parse(skillset = skills ? (skill1 as string,\n\t\tskill2 as string,\n\t\tskill3 as string),\n\tformat: 'delimited',\n\tcolumnNamesAsHeader: false,\n\tcolumnDelimiter: '|',\n\tnullValue: '') ~> skillsParse\nskillsParse parse(address = address ? (city as string,\n\t\tcountry as string),\n\tformat: 'json',\n\tdocumentForm: 'singleDocument') ~> AddressParse\nAddressParse sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['parsedata.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\tempid,\n\t\tempname,\n\t\tskill1 = skillset.skill1,\n\t\tskill2 = skillset.skill2,\n\t\tskill3 = skillset.skill3,\n\t\tcity = address.city,\n\t\tcountry = address.country\n\t),\n\tpartitionBy('hash', 1)) ~> sink1"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/payrollempdataflow')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "empdataset",
-								"type": "DatasetReference"
-							},
-							"name": "empdata"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "outputdataset",
-								"type": "DatasetReference"
-							},
-							"name": "payrollempdata"
-						}
-					],
-					"transformations": [
-						{
-							"name": "payrolldataFilter"
-						}
-					],
-					"script": "source(output(\n\t\tEmpid as string,\n\t\tEmployeeName as string,\n\t\tAddress as string,\n\t\tPhoneNumber as string,\n\t\tSalary as string,\n\t\tDepartment as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> empdata\nempdata filter(equals(Department, '3')) ~> payrolldataFilter\npayrolldataFilter sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['payrollempdata.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tmapColumn(\n\t\tEmpid,\n\t\tEmployeeName,\n\t\tAddress,\n\t\tPhoneNumber,\n\t\tSalary,\n\t\tDepartment\n\t),\n\tpartitionBy('hash', 1)) ~> payrollempdata"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/powerquery1')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "WranglingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"name": "empdataset",
-							"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> empdataset",
-							"dataset": {
-								"referenceName": "empdataset",
-								"type": "DatasetReference"
-							}
-						},
-						{
-							"name": "deptdataset",
-							"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> deptdataset",
-							"dataset": {
-								"referenceName": "deptdataset",
-								"type": "DatasetReference"
-							}
-						}
-					],
-					"script": "section Section1;\r\nshared empdataset = let\r\n  AdfDoc = AzureStorage.BlobContents(\"https://sadev0002.blob.core.windows.net/devdemo/input/employee.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared deptdataset = let\r\n  AdfDoc = AzureStorage.BlobContents(\"https://sadev0002.blob.core.windows.net/devdemo/input/department.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared UserQuery = let\r\n  Source = empdataset,\r\n  #\"Merged queries\" = Table.NestedJoin(Source, {\"Department\"}, deptdataset, {\"deptid\"}, \"deptdataset\", JoinKind.Inner),\r\n  #\"Expanded deptdataset\" = Table.ExpandTableColumn(#\"Merged queries\", \"deptdataset\", {\"deptid\", \" deptname\"}, {\"deptdataset.deptid\", \"deptdataset. deptname\"}),\r\n  #\"Removed columns\" = Table.RemoveColumns(#\"Expanded deptdataset\", {\"Department\"}),\r\n  #\"Renamed columns\" = Table.RenameColumns(#\"Removed columns\", {{\"deptdataset.deptid\", \"deptid\"}, {\"deptdataset. deptname\", \"deptname\"}})\r\nin\r\n  #\"Renamed columns\";\r\n",
-					"documentLocale": "en-us"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/powerquery2')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "WranglingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"name": "empdataset",
-							"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> empdataset",
-							"dataset": {
-								"referenceName": "empdataset",
-								"type": "DatasetReference"
-							}
-						},
-						{
-							"name": "deptdataset",
-							"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> deptdataset",
-							"dataset": {
-								"referenceName": "deptdataset",
-								"type": "DatasetReference"
-							}
-						}
-					],
-					"script": "section Section1;\r\nshared empdataset = let\r\n  AdfDoc = AzureStorage.BlobContents(\"https://sadev0002.blob.core.windows.net/devdemo/input/employee.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared deptdataset = let\r\n  AdfDoc = AzureStorage.BlobContents(\"https://sadev0002.blob.core.windows.net/devdemo/input/department.csv\"),\r\n  Csv = Csv.Document(AdfDoc, [Delimiter = \",\", Encoding = TextEncoding.Utf8, QuoteStyle = QuoteStyle.Csv]),\r\n  PromotedHeaders = Table.PromoteHeaders(Csv, [PromoteAllScalars = true])\r\nin\r\n  PromotedHeaders;\r\nshared UserQuery = let\r\n  Source = empdataset,\r\n  #\"Grouped rows\" = Table.Group(Source, {\"Department\"}, {{\"totalemployees\", each Table.RowCount(_), Int64.Type}}),\r\n  #\"Merged queries\" = Table.NestedJoin(#\"Grouped rows\", {\"Department\"}, deptdataset, {\"deptid\"}, \"deptdataset\", JoinKind.Inner),\r\n  #\"Expanded deptdataset\" = Table.ExpandTableColumn(#\"Merged queries\", \"deptdataset\", {\"deptid\", \" deptname\"}, {\"deptdataset.deptid\", \"deptdataset. deptname\"}),\r\n  #\"Reordered columns\" = Table.ReorderColumns(#\"Expanded deptdataset\", {\"deptdataset.deptid\", \"deptdataset. deptname\", \"Department\", \"totalemployees\"}),\r\n  #\"Removed columns\" = Table.RemoveColumns(#\"Reordered columns\", {\"Department\", \"deptdataset.deptid\"})\r\nin\r\n  #\"Removed columns\";\r\n",
-					"documentLocale": "en-us"
 				}
 			},
 			"dependsOn": []

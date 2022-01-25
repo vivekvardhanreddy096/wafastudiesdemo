@@ -1637,6 +1637,251 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/logdetailspipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 1
+						}
+					},
+					{
+						"name": "Set variable1",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Wait1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "LogFileName",
+							"value": {
+								"value": "@concat(formatDateTime(utcNow(),'yyyy-MM-dd'),'_log.csv')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "Set variable1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "logoutput",
+								"type": "DatasetReference",
+								"parameters": {
+									"logfilename": {
+										"value": "@variables('LogFileName')",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "If Condition1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@activity('Get Metadata1').output.exists",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "logdetailsdataflow",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "logdetailsdataflow",
+											"type": "DataFlowReference",
+											"parameters": {
+												"ADFName": {
+													"value": "'@{pipeline().DataFactory}'",
+													"type": "Expression"
+												},
+												"PipelineName": {
+													"value": "'@{pipeline().Pipeline}'",
+													"type": "Expression"
+												},
+												"Status": {
+													"value": "'@{string('success')}'",
+													"type": "Expression"
+												},
+												"Runid": {
+													"value": "'@{pipeline().RunId}'",
+													"type": "Expression"
+												},
+												"TriggerName": {
+													"value": "'@{pipeline().TriggerName}'",
+													"type": "Expression"
+												},
+												"logfilename": {
+													"value": "'@{variables('LogFileName')}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"source1": {},
+												"sink1": {
+													"logfilename": {
+														"value": "@variables('LogFileName')",
+														"type": "Expression"
+													}
+												}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "logdetailsdataflowappend",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "logdetailsdataflowappend",
+											"type": "DataFlowReference",
+											"parameters": {
+												"ADFName": {
+													"value": "'@{pipeline().DataFactory}'",
+													"type": "Expression"
+												},
+												"PipelineName": {
+													"value": "'@{pipeline().Pipeline}'",
+													"type": "Expression"
+												},
+												"Status": {
+													"value": "'@{string('success')}'",
+													"type": "Expression"
+												},
+												"Runid": {
+													"value": "'@{pipeline().RunId}'",
+													"type": "Expression"
+												},
+												"TriggerName": {
+													"value": "'@{pipeline().TriggerName}'",
+													"type": "Expression"
+												},
+												"logfilename": {
+													"value": "'@{variables('LogFileName')}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"source1": {},
+												"source2": {
+													"logfilename": {
+														"value": "@variables('LogFileName')",
+														"type": "Expression"
+													}
+												},
+												"sink1": {
+													"logfilename": {
+														"value": "@variables('LogFileName')",
+														"type": "Expression"
+													}
+												}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"LogFileName": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/logoutput')]",
+				"[concat(variables('factoryId'), '/dataflows/logdetailsdataflow')]",
+				"[concat(variables('factoryId'), '/dataflows/logdetailsdataflowappend')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/lookuppipeline')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -3345,6 +3590,38 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/dummydataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sadev0002",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "dummy.txt",
+						"folderPath": "input",
+						"container": "devdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sadev0002')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/emp1_SqlServer_dataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -3944,6 +4221,39 @@
 						"type": "String"
 					}
 				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sadev0002')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/logoutput')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sadev0002",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"logfilename": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "log",
+						"container": "devdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_sadev0002')]"
@@ -5286,6 +5596,98 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/Fruitsdataset')]",
 				"[concat(variables('factoryId'), '/datasets/outputdataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/logdetailsdataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "dummydataset",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "logoutput",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DerivedColumn1"
+						},
+						{
+							"name": "Select1"
+						}
+					],
+					"script": "parameters{\n\tADFName as string,\n\tPipelineName as string,\n\tStatus as string,\n\tRunid as string,\n\tTriggerName as string,\n\tlogfilename as string\n}\nsource(output(\n\t\tColumn_1 as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource1 derive(ADFName = $ADFName,\n\t\tPipelineName = $PipelineName,\n\t\tStatus = $Status,\n\t\tRunid = $Runid,\n\t\tTriggerName = $TriggerName) ~> DerivedColumn1\nDerivedColumn1 select(mapColumn(\n\t\tADFName,\n\t\tPipelineName,\n\t\tStatus,\n\t\tRunid,\n\t\tTriggerName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:[($logfilename)],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dummydataset')]",
+				"[concat(variables('factoryId'), '/datasets/logoutput')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/logdetailsdataflowappend')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "dummydataset",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "logoutput",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "logoutput",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DerivedColumn1"
+						},
+						{
+							"name": "Select1"
+						},
+						{
+							"name": "Union1"
+						}
+					],
+					"script": "parameters{\n\tADFName as string,\n\tPipelineName as string,\n\tStatus as string,\n\tRunid as string,\n\tTriggerName as string,\n\tlogfilename as string\n}\nsource(output(\n\t\tColumn_1 as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source2\nsource1 derive(ADFName = $ADFName,\n\t\tPipelineName = $PipelineName,\n\t\tStatus = $Status,\n\t\tRunid = $Runid,\n\t\tTriggerName = $TriggerName) ~> DerivedColumn1\nDerivedColumn1 select(mapColumn(\n\t\tADFName,\n\t\tPipelineName,\n\t\tStatus,\n\t\tRunid,\n\t\tTriggerName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1, source2 union(byName: true)~> Union1\nUnion1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:[($logfilename)],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dummydataset')]",
+				"[concat(variables('factoryId'), '/datasets/logoutput')]"
 			]
 		},
 		{

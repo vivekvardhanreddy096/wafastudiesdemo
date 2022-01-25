@@ -1,0 +1,45 @@
+{
+	"name": "logdetailsdataflowappend",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dummydataset",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				},
+				{
+					"dataset": {
+						"referenceName": "logoutput",
+						"type": "DatasetReference"
+					},
+					"name": "source2"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "logoutput",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn1"
+				},
+				{
+					"name": "Select1"
+				},
+				{
+					"name": "Union1"
+				}
+			],
+			"script": "parameters{\n\tADFName as string,\n\tPipelineName as string,\n\tStatus as string,\n\tRunid as string,\n\tTriggerName as string,\n\tlogfilename as string\n}\nsource(output(\n\t\tColumn_1 as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source1\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> source2\nsource1 derive(ADFName = $ADFName,\n\t\tPipelineName = $PipelineName,\n\t\tStatus = $Status,\n\t\tRunid = $Runid,\n\t\tTriggerName = $TriggerName) ~> DerivedColumn1\nDerivedColumn1 select(mapColumn(\n\t\tADFName,\n\t\tPipelineName,\n\t\tStatus,\n\t\tRunid,\n\t\tTriggerName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1, source2 union(byName: true)~> Union1\nUnion1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:[($logfilename)],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+		}
+	}
+}

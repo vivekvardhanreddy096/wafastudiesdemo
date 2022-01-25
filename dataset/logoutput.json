@@ -1,0 +1,32 @@
+{
+	"name": "logoutput",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sadev0002",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"logfilename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().logfilename",
+					"type": "Expression"
+				},
+				"folderPath": "log",
+				"container": "devdemo"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

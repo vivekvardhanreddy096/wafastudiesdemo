@@ -66,6 +66,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -107,6 +108,32 @@
 								"dataflow": {
 									"referenceName": "logdetailsdataflow",
 									"type": "DataFlowReference",
+									"parameters": {
+										"ADFName": {
+											"value": "'@{pipeline().DataFactory}'",
+											"type": "Expression"
+										},
+										"PipelineName": {
+											"value": "'@{pipeline().Pipeline}'",
+											"type": "Expression"
+										},
+										"Status": {
+											"value": "'@{string('success')}'",
+											"type": "Expression"
+										},
+										"Runid": {
+											"value": "'@{pipeline().RunId}'",
+											"type": "Expression"
+										},
+										"TriggerName": {
+											"value": "'@{pipeline().TriggerName}'",
+											"type": "Expression"
+										},
+										"logfilename": {
+											"value": "'@{variables('LogFileName')}'",
+											"type": "Expression"
+										}
+									},
 									"datasetParameters": {
 										"sink1": {
 											"logfilename": {
@@ -141,8 +168,40 @@
 								"dataflow": {
 									"referenceName": "logdetailsdataflowappend",
 									"type": "DataFlowReference",
+									"parameters": {
+										"ADFName": {
+											"value": "'@{pipeline().DataFactory}'",
+											"type": "Expression"
+										},
+										"PipelineName": {
+											"value": "'@{pipeline().Pipeline}'",
+											"type": "Expression"
+										},
+										"Status": {
+											"value": "'@{string('success')}'",
+											"type": "Expression"
+										},
+										"Runid": {
+											"value": "'@{pipeline().RunId}'",
+											"type": "Expression"
+										},
+										"TriggerName": {
+											"value": "'@{pipeline().TriggerName}'",
+											"type": "Expression"
+										},
+										"logfilename": {
+											"value": "'@{variables('LogFileName')}'",
+											"type": "Expression"
+										}
+									},
 									"datasetParameters": {
 										"source2": {
+											"logfilename": {
+												"value": "@variables('LogFileName')",
+												"type": "Expression"
+											}
+										},
+										"sink1": {
 											"logfilename": {
 												"value": "@variables('LogFileName')",
 												"type": "Expression"

@@ -865,39 +865,32 @@
 						"userProperties": [],
 						"typeProperties": {
 							"expression": {
-								"value": "@equals(variables('filecount'),17)",
+								"value": "@equals(variables('filecount'),'17')",
 								"type": "Expression"
 							},
-							"ifTrueActivities": [
+							"ifFalseActivities": [
 								{
-									"name": "existsdataflow",
-									"type": "ExecuteDataFlow",
+									"name": "Wait1",
+									"type": "Wait",
 									"dependsOn": [],
-									"policy": {
-										"timeout": "1.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
 									"userProperties": [],
 									"typeProperties": {
-										"dataflow": {
-											"referenceName": "existsdataflow",
-											"type": "DataFlowReference",
-											"parameters": {},
-											"datasetParameters": {
-												"empdata": {},
-												"deptdata": {},
-												"sink1": {}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
+										"waitTimeInSeconds": 1
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Set variable2",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "filecount1",
+										"value": {
+											"value": "@string(add(int(variables('filecount')),1))",
+											"type": "Expression"
+										}
 									}
 								}
 							]
@@ -911,13 +904,15 @@
 				"variables": {
 					"filecount": {
 						"type": "String"
+					},
+					"filecount1": {
+						"type": "String"
 					}
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/inputdataset')]",
-				"[concat(variables('factoryId'), '/dataflows/existsdataflow')]"
+				"[concat(variables('factoryId'), '/datasets/inputdataset')]"
 			]
 		},
 		{

@@ -1,0 +1,74 @@
+{
+	"name": "Seriespipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "test",
+					"value": "asfsdf"
+				}
+			},
+			{
+				"name": "Set variable2",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "test",
+					"value": "sdfsd"
+				}
+			},
+			{
+				"name": "Set variable3",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "test",
+					"value": "@int('1')"
+				}
+			},
+			{
+				"name": "Wait1",
+				"type": "Wait",
+				"dependsOn": [
+					{
+						"activity": "Set variable3",
+						"dependencyConditions": [
+							"Skipped",
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 1
+				}
+			}
+		],
+		"variables": {
+			"test": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}

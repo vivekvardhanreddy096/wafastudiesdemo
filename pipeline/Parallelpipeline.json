@@ -1,0 +1,94 @@
+{
+	"name": "Parallelpipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "test",
+					"value": "@int('1')"
+				}
+			},
+			{
+				"name": "Set variable2",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "test",
+					"value": "asfs"
+				}
+			},
+			{
+				"name": "Set variable3",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "test",
+					"value": "sfse"
+				}
+			},
+			{
+				"name": "Dummy",
+				"type": "Wait",
+				"dependsOn": [
+					{
+						"activity": "Set variable1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set variable2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set variable3",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 1
+				}
+			},
+			{
+				"name": "Set variable4",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Dummy",
+						"dependencyConditions": [
+							"Skipped"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "errormessage",
+					"value": {
+						"value": "@concat(activity('Set variable1').Error.message,'|',activity('Set variable2').Error.messageactivity('Set variable3').Error.message)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"test": {
+				"type": "String"
+			},
+			"errormessage": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}

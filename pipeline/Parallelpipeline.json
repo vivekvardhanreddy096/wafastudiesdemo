@@ -9,7 +9,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"variableName": "test",
-					"value": "@int('1')"
+					"value": "sdfsd"
 				}
 			},
 			{
@@ -29,7 +29,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"variableName": "test",
-					"value": "sfse"
+					"value": "@int('1')"
 				}
 			},
 			{
@@ -75,7 +75,7 @@
 				"typeProperties": {
 					"variableName": "errormessage",
 					"value": {
-						"value": "@concat(activity('Set variable1').Error.message,'|',activity('Set variable2').Error.messageactivity('Set variable3').Error.message)",
+						"value": "@concat(activity('Set variable1')?.Error?.message,'|',activity('Set variable2')?.Error?.message,'|',activity('Set variable3')?.Error?.message)",
 						"type": "Expression"
 					}
 				}

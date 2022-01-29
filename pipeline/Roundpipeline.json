@@ -1,0 +1,26 @@
+{
+	"name": "Roundpipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "RoundNumber",
+					"value": {
+						"value": "@string(div(float(split(string(mul(123.43467,100)),'.')[0]),100))",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"RoundNumber": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}
